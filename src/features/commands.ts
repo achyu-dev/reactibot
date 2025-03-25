@@ -1242,7 +1242,6 @@ const createCommandsMessage = () => {
       return a.words[0].split("\n", 1)[0].localeCompare(b.words[0]);
     });
 
-    
     const boldTitle = `**${category}**`;
     const commandDescriptions = commands
       .map((command) => {
@@ -1272,7 +1271,7 @@ export function isInsideCodeBlock(text: string, position: number): boolean {
   let insideSingle = false;
   let insideTriple = false;
   let i = 0;
-  
+
   while (i < position) {
     if (text.slice(i, i + 3) === "```") {
       insideTriple = !insideTriple;
