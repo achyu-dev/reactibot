@@ -5,11 +5,13 @@ import {
   ChannelType,
   EmbedType,
   Message,
+  OmitPartialGroupDMChannel,
+  PartialGroupDMChannel,
   TextChannel,
 } from "discord.js";
 import cooldown from "./cooldown.js";
 import type { ChannelHandlers } from "../types/index.d.ts";
-import { isStaff } from "../helpers/discord.js";
+import { getMessage, isStaff } from "../helpers/discord.js";
 import {
   extractSearchKey,
   getReactDocsContent,
@@ -25,7 +27,7 @@ type Command = {
   words: string[];
   help: string;
   category: Categories;
-  handleMessage: (msg: Message) => void;
+  handleMessage: (msg: OmitPartialGroupDMChannel<Message>) => void;
   cooldown?: number;
 };
 
@@ -67,6 +69,58 @@ export const commandsList: Command[] = [
             title: "Code of Conduct",
             type: EmbedType.Rich,
             description: `Reactiflux is the largest chat community of React developers. We make a deliberate effort to have a light touch when it comes to moderating, but we do have some expectations of how our members will behave. Please read the [full Reactiflux Code of Conduct](https://www.reactiflux.com/conduct)`,
+            color: EMBED_COLOR,
+          },
+        ],
+      });
+    },
+  },
+  {
+    words: [`!contribution`],
+    help: `informs user's of contributing to React codebase`,
+    category: "Communication",
+    handleMessage: (msg) => {
+      msg.reply({
+        embeds: [
+          {
+            title: "Contributing to React",
+            type: EmbedType.Rich,
+            description: `
+            React is a very large and complex project. It has a steep learning curve, involves a lot of internal tooling and architecture, and often requires deep context to make meaningful contributions.
+If you’re looking to gain experience in open source, we recommend starting with projects that are more beginner-friendly but still widely used and respected in the React ecosystem. Great alternatives include:
+            `,
+            fields: [
+              {
+                name: "Open Source Alternatives",
+                value: `
+- [TanStack](https://github.com/tanstack)
+- [Preact](https://github.com/preactjs/preact)
+- [Remix](https://github.com/remix-run/remix)
+- [SolidJS](https://github.com/solidjs/solid)
+- [React Hook Form](https://github.com/react-hook-form/react-hook-form)
+- [freeCodeCamp](https://github.com/freeCodeCamp/freeCodeCamp)
+- [Daily.dev](https://github.com/dailydotdev/daily)
+                                `,
+                inline: true,
+              },
+            ],
+          },
+        ],
+      });
+    },
+  },
+  {
+    words: [`!crosspost`],
+    help: `provides a no cross-post message`,
+    category: "Communication",
+    handleMessage: (msg) => {
+      msg.channel.send({
+        embeds: [
+          {
+            title: "Please Avoid Cross-Posting",
+            type: EmbedType.Rich,
+            description:
+              "Just a friendly reminder: please avoid posting the same message in multiple channels. Choose the channel that best fits your question and allow some time for a response. If you don’t hear back after a while, feel free to bump your message.",
             color: EMBED_COLOR,
           },
         ],
@@ -125,6 +179,44 @@ export const commandsList: Command[] = [
     },
   },
   {
+    words: [`!courses`],
+    help: `provides a curated list of quality React courses and learning platforms`,
+    category: "React/Redux",
+    handleMessage: (msg) => {
+      msg.channel.send({
+        embeds: [
+          {
+            title: "Quality React Courses & Learning Platforms",
+            type: EmbedType.Rich,
+            description: `Here are some highly recommended courses and platforms for learning React, from beginner to advanced levels:`,
+            fields: [
+              {
+                name: "Premium Courses",
+                value: `
+- [Joy of React](https://www.joyofreact.com/) - Comprehensive React course
+- [Epic React](https://epicreact.dev/) - Advanced React patterns and techniques
+- [Advanced React](https://www.advanced-react.com/) - By Nadia Makarevich
+- [Jack Herrington's Courses](https://www.youtube.com/@jherr) - Various React topics
+                `,
+                inline: true,
+              },
+              {
+                name: "Learning Platforms",
+                value: `
+- [Frontend Masters](https://frontendmasters.com/) - Professional-grade courses
+- [React.dev](https://react.dev/) - Official React documentation
+- [Reactiflux Learning Resources](https://www.reactiflux.com/learning) - Curated links
+                `,
+                inline: true,
+              },
+            ],
+            color: EMBED_COLOR,
+          },
+        ],
+      });
+    },
+  },
+  {
     words: [`!ymnnr`],
     help: `links to the You Might Not Need Redux article`,
     category: "React/Redux",
@@ -134,7 +226,7 @@ export const commandsList: Command[] = [
           {
             title: "You Might Not Need Redux",
             type: EmbedType.Rich,
-            description: `People often choose Redux before they need it. “What if our app doesn’t scale without it?"
+            description: `People often choose Redux before they need it. “What if our app doesn't scale without it?"
 
 Read more about this in the [article "You Might Not Need Redux" by Dan Abramov](https://medium.com/@dan_abramov/you-might-not-need-redux-be46360cf367)`,
             color: EMBED_COLOR,
@@ -1227,7 +1319,7 @@ Authentication is a critical part of most web applications. Here are some resour
             title: "create-react-app is deprecated",
             type: EmbedType.Rich,
             description: `
-create-react-app is deprecated and no longer recommended for use. It is not maintained and has a large number of security vulnerabilities. Please use [Vite](https://vitejs.dev/) or [Next.js](https://nextjs.org/) instead. The [React docs](https://react.dev/learn/start-a-new-react-project#can-i-use-react-without-a-framework) has more to say about using React without the use of a framework like Next or Remix.
+create-react-app is deprecated and no longer recommended for use. It is not maintained and has a large number of security vulnerabilities. Please use [Vite](https://vitejs.dev/) or [Next.js](https://nextjs.org/) instead. Read more about [Sunsetting Create React](https://react.dev/blog/2025/02/14/sunsetting-create-react-app).
             `,
             color: EMBED_COLOR,
           },
@@ -1290,12 +1382,19 @@ const createCommandsMessage = () => {
 
 const commands: ChannelHandlers = {
   handleMessage: async ({ msg: maybeMessage }) => {
-    if (!maybeMessage.guild && maybeMessage.channel.type !== ChannelType.DM) {
+    if (
+      (!maybeMessage.inGuild() &&
+        maybeMessage.channel.type !== ChannelType.DM) ||
+      maybeMessage.channel instanceof PartialGroupDMChannel
+    ) {
       return;
     }
-    const msg = maybeMessage.partial
-      ? await maybeMessage.fetch()
-      : maybeMessage;
+
+    const msg = await getMessage(maybeMessage);
+
+    if (!msg) {
+      return;
+    }
 
     commandsList.forEach((command) => {
       const keyword = command.words.find((word) => {

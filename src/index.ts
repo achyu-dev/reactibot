@@ -41,6 +41,11 @@ import {
 import { recommendBookCommand } from "./features/book-list.js";
 import { mdnSearch } from "./features/mdn.js";
 import "./server.js";
+import { jobScanner } from "./features/job-scanner.js";
+
+import { messageDuplicateChecker } from "./features/duplicate-scanner/duplicate-scanner.js";
+
+import { getMessage } from "./helpers/discord.js";
 
 export const bot = new Client({
   intents: [
@@ -125,9 +130,10 @@ const addHandler = (
   channels.forEach((channelId) => {
     const existingHandlers = channelHandlersById[channelId];
     if (existingHandlers) {
-      existingHandlers.push(...handlers);
+      // Create a new array to avoid mutating the existing one
+      channelHandlersById[channelId] = [...existingHandlers, ...handlers];
     } else {
-      channelHandlersById[channelId] = handlers;
+      channelHandlersById[channelId] = [...handlers];
     }
   });
 };
@@ -136,7 +142,12 @@ const handleMessage = async (message: Message) => {
   if (message.system) {
     return;
   }
-  const msg = message.partial ? await message.fetch() : message;
+
+  const msg = await getMessage(message);
+
+  if (!msg) {
+    return;
+  }
 
   const channel = msg.channel;
   const channelId = channel.isThread()
@@ -204,12 +215,26 @@ addHandler(
   ],
   promotionThread,
 );
-
+addHandler(
+  [
+    CHANNELS.helpReact,
+    CHANNELS.helpJs,
+    CHANNELS.helpReactNative,
+    CHANNELS.helpStyling,
+    CHANNELS.helpBackend,
+    CHANNELS.generalReact,
+    CHANNELS.generalTech,
+  ],
+  jobScanner,
+);
 const threadChannels = [CHANNELS.helpJs, CHANNELS.helpThreadsReact];
 addHandler(threadChannels, autothread);
 
 addHandler(CHANNELS.resumeReview, resumeReviewPdf);
-
+addHandler(
+  [CHANNELS.helpReact, CHANNELS.generalReact, CHANNELS.generalTech],
+  messageDuplicateChecker,
+);
 bot.on("ready", () => {
   deployCommands(bot);
   jobsMod(bot);
