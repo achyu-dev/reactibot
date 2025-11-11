@@ -128,4 +128,9 @@ const REACT_AVAILABLE_DOCS = [
   "react-dom/static/prerender",
   "react-dom/static/prerenderToNodeStream",
   "react/Activity",
+  "react/useEffectEvent",
+  "react-dom/cacheSignal",
+  "react-dom/static/resume",
+  "react-dom/static/resumeAndPrerender",
+  "react-dom/static/resumeToPipeableStream",
 ];
