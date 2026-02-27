@@ -40,6 +40,24 @@ const sortedCategories: Categories[] = [
 
 export const commandsList: Command[] = [
   {
+    words: [`!ai`],
+    help: `explains why AI-generated responses should be avoided`,
+    category: "Communication",
+    handleMessage: (msg) => {
+      msg.channel.send({
+        embeds: [
+          {
+            title: "Please Avoid AI-Generated Posts",
+            type: EmbedType.Rich,
+            description:
+              "AI-generated responses may seem helpful but are often unverified or misleading unless you’ve personally tried them. This server is for human experience and discussion—many users are here specifically for firsthand insight rather than AI-generated answers. Sharing your own thoughts or experience helps everyone more.",
+            color: EMBED_COLOR,
+          },
+        ],
+      });
+    },
+  },
+  {
     words: [`!commands`],
     help: `lists all available commands`,
     category: "Reactiflux",
@@ -373,6 +391,35 @@ Have a look at these resources on how to ask good questions:
 - [Coding Killed the Cat: "How to Ask for Programming Help"](http://wp.me/p2oIwo-26)
 - [Stack Overflow: "How do I ask a good question?"](https://stackoverflow.com/help/how-to-ask)
 - [Eric S. Raymond; "How To Ask Questions The Smart Way"](https://git.io/JKscV)
+`,
+            color: EMBED_COLOR,
+          },
+        ],
+      });
+    },
+  },
+  {
+    words: [`!security`],
+    help: `general information around managing security for a web application.`,
+    category: "Reactiflux",
+    handleMessage: (msg) => {
+      msg.channel.send({
+        embeds: [
+          {
+            title: "Security Tips",
+            type: EmbedType.Rich,
+            description: `Managing security in a web application requires a proactive approach.
+
+Some points to consider:
+
+- Don't use create-react-app it is [no longer supported](https://react.dev/blog/2025/02/14/sunsetting-create-react-app).
+- Set up automated alerts via a service like [dependabot](https://docs.github.com/en/code-security/getting-started/dependabot-quickstart-guide) to be notified of new disclosures.
+- Review packages either by inspecting the code or using a service like [Snyk](https://security.snyk.io/vuln/npm).
+- Apply [secure coding principles and practices](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/stable-en/02-checklist/05-checklist.html) - there are [free for open source tool](https://owasp.org/www-community/Free_for_Open_Source_Application_Security_Tools) like [Sonar Qube](https://www.sonarsource.com/open-source-editions/sonarqube-community-edition/) which help find common vulnerabilities like SQL injection, cross-site scripting (XSS), path traversal, and insecure configurations.
+- Proactively keep your technology up to date – (everything not just packages).
+- Keep your identity safe online, don't reuse passwords, enable multi-factor authentication and use a password manager service.
+
+If you are ever unsure just ask! Better to be safe then sorry.
 `,
             color: EMBED_COLOR,
           },
@@ -1116,6 +1163,7 @@ _ _
 - [Feathers](https://feathersjs.com/)
 - [AdonisJS](https://adonisjs.com/)
 - [Sails](https://sailsjs.com/)
+- [TanStack Start](https://tanstack.com/start/)
                                 `,
                 inline: true,
               },
